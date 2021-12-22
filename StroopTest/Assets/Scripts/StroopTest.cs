@@ -2,15 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.AI;
 using Random = UnityEngine.Random;
-// ReSharper disable once CollectionNeverQueried.Local
+// ReSharper disable once CollectionNeverQueried.Global
 
 public class StroopTest : MonoBehaviour
 {
-    public enum Colours
+    private enum Colours
     {
         Red,
         Blue,
@@ -28,25 +29,52 @@ public class StroopTest : MonoBehaviour
     [Header("UI")] 
     [SerializeField] private TextMeshProUGUI answerText;
     [SerializeField] private TextMeshProUGUI scoreText;
+    [Space] 
+    [SerializeField] private Canvas menuCanvas;
+    [SerializeField] private Canvas countdownCanvas;
+    [SerializeField] private Canvas gameCanvas;
+    [SerializeField] private Canvas endCanvas;
 
     [Header("Colours")] 
     [SerializeField] private Color red;
     [SerializeField] private Color blue;
     [SerializeField] private Color green;
     [SerializeField] private Color purple;
+
+    [Space] 
+    
+    [SerializeField] private Timer timer;
     
     
     // Start is called before the first frame update
     private void Start()
     {
-        StartGame();
+        menuCanvas.gameObject.SetActive(true);
+        countdownCanvas.gameObject.SetActive(false);
+        gameCanvas.gameObject.SetActive(false);
+        endCanvas.gameObject.SetActive(false);
+
+        if (!timer) timer = GetComponent<Timer>();
     }
 
-    private void StartGame()
+    // You can't call async functions from unity buttons, so this is an in-between
+    public void StartGame() => StartNewGame();
+    
+    private async Task StartNewGame()
     {
+        menuCanvas.gameObject.SetActive(false);
+        countdownCanvas.gameObject.SetActive(true);
+        
+        // Wait for the game countdown to finish
+        await timer.StartGameCountdown();
+        
+        countdownCanvas.gameObject.SetActive(false);
+
         _score = 0;
         _answerCount = 0;
         NewColour();
+        
+        gameCanvas.gameObject.SetActive(true);
     }
 
     private void EndGame()
@@ -75,6 +103,9 @@ public class StroopTest : MonoBehaviour
         return _colours[Random.Range(0, list.Count)];
     }
 
+    /// <summary>
+    /// Returns the Color value of whichever Colour is passed in
+    /// </summary>
     private Color GetColour(Colours colour)
     {
         return colour switch
@@ -89,8 +120,7 @@ public class StroopTest : MonoBehaviour
 
     public void RecieveAnswer(string colour)
     {
-        print($"{colour} + {_answer.ToString()}");
-        
+        // If the player answers correct, add to the score
         if (colour == _answer.ToString())
         {
             _score++;
