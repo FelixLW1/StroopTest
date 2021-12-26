@@ -21,6 +21,7 @@ public class StroopTest : MonoBehaviour
 
     private readonly List<Colours> _colours = new List<Colours>() {Colours.Red, Colours.Blue, Colours.Green, Colours.Purple};
     private Colours _answer;
+    private Colours _lastAnswer;
     private int _score;
     private int _answerCount;
 
@@ -90,11 +91,13 @@ public class StroopTest : MonoBehaviour
         var newList = new List<Colours>(_colours);
 
         newList.Remove(_answer);
+        newList.Remove(_lastAnswer);
 
         answerText.text = _answer.ToString();
         
         // Give the answer a random colour that isn't the colour of the answer
         _answer = newList[Random.Range(0, newList.Count)];
+        _lastAnswer = _answer;
         answerText.color = GetColour(_answer);
     }
     
