@@ -23,6 +23,7 @@ public class StroopTest : MonoBehaviour
     private Colours _answer;
     private Colours _lastAnswer;
     private int _score;
+    [SerializeField]
     private int _answerCount;
     private bool _inCountdown = false;
 
@@ -54,11 +55,13 @@ public class StroopTest : MonoBehaviour
     private void OnEnable()
     {
         Timer.RoundTimerFinished += NewColour;
+        Timer.RoundTimerFinished += IncreaseAnswerCount;
     }
 
     private void OnDisable()
     {
         Timer.RoundTimerFinished -= NewColour;
+        Timer.RoundTimerFinished -= IncreaseAnswerCount;
     }
 
     // Start is called before the first frame update
@@ -80,8 +83,10 @@ public class StroopTest : MonoBehaviour
     
     private async Task StartNewGame()
     {
+        // Stop any timers
         timer.StopAllCoroutines();
         
+        // Turn on right canvases
         menuCanvas.gameObject.SetActive(false);
         gameCanvas.gameObject.SetActive(false);
         countdownCanvas.gameObject.SetActive(true);
@@ -96,6 +101,7 @@ public class StroopTest : MonoBehaviour
         
         countdownCanvas.gameObject.SetActive(false);
 
+        // Reset player data
         _score = 0;
         _answerCount = 0;
         NewColour();
@@ -119,8 +125,9 @@ public class StroopTest : MonoBehaviour
     {
         timer.StartCoroutine(timer.StartRoundCountdown(secondsToAnswer));
         
+        // Generate the colour word (text part) 
         _answer = GetRandomColour(_colours);
-
+        
         // copy the colours into a new list
         var newList = new List<Colours>(_colours);
 
@@ -131,7 +138,9 @@ public class StroopTest : MonoBehaviour
         
         // Give the answer a random colour that isn't the colour of the answer
         _answer = newList[Random.Range(0, newList.Count)];
+
         _lastAnswer = _answer;
+        
         answerText.color = GetColour(_answer);
     }
     
@@ -157,8 +166,6 @@ public class StroopTest : MonoBehaviour
 
     public void RecieveAnswer(string colour)
     {
-        _answerCount++;
-        
         // If the player answers correct, add to the score
         if (colour == _answer.ToString())
         {
@@ -176,11 +183,7 @@ public class StroopTest : MonoBehaviour
         
         scoreText.text = "Score: " + _score.ToString();
         
-        if (_answerCount == answersInRound)
-        {
-            EndGame(); 
-            return;
-        }
+        IncreaseAnswerCount();
         
         // Stop the last colour timer
         timer.StopAllCoroutines();
@@ -199,5 +202,14 @@ public class StroopTest : MonoBehaviour
     public void QuitGame()
     {
         Application.Quit();
+    }
+
+    private void IncreaseAnswerCount()
+    {
+        _answerCount++;
+
+        if (_answerCount != answersInRound) return;
+        
+        EndGame();
     }
 }
